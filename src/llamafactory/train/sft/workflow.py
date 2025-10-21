@@ -50,7 +50,7 @@ def run_sft(
     template = get_template_and_fix_tokenizer(tokenizer, data_args)
     dataset_module = get_dataset(template, model_args, data_args, training_args, stage="sft", **tokenizer_module)
     channel_index_map = {}
-    all_channels = []
+    
     if finetuning_args.channel_loss:
         # 获取所有channel类型
         all_channel_set = set()
@@ -73,7 +73,10 @@ def run_sft(
                 dataset_module[key] = dataset_module[key].map(lambda examples: {"channel": [[channel_index_map[channel] for channel in channels] for channels in examples["channel"]]}, batched=True, num_proc=32, remove_columns=["channel"])
             else:
                 raise ValueError(f"Unsupported channel type: {dataset_module[key].features['channel'].dtype}")
-
+    else:
+        all_channels = None
+        for key in dataset_module.keys():
+            dataset_module[key] = dataset_module[key].remove_columns(["channel"])
     model = load_model(tokenizer, model_args, finetuning_args, training_args.do_train)
 
     if getattr(model, "is_quantized", False) and not training_args.do_train:
