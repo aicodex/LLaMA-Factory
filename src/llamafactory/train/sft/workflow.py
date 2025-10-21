@@ -76,7 +76,8 @@ def run_sft(
     else:
         all_channels = None
         for key in dataset_module.keys():
-            dataset_module[key] = dataset_module[key].remove_columns(["channel"])
+            if "channel" in dataset_module[key].column_names:
+                dataset_module[key] = dataset_module[key].remove_columns(["channel"])
     model = load_model(tokenizer, model_args, finetuning_args, training_args.do_train)
 
     if getattr(model, "is_quantized", False) and not training_args.do_train:
